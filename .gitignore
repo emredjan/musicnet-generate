@@ -111,6 +111,7 @@ venv.bak/
 dmypy.json
 
 # project specific
+.vscode/
 data/
 temp/
 weights/
