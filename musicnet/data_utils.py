@@ -6,6 +6,7 @@ from music21 import chord, converter, instrument, note
 
 def get_notes(midi_path: Path):
 
+    songs = []
     notes = []
 
     total_songs = len(list(midi_path.glob('*.mid')))
@@ -13,7 +14,8 @@ def get_notes(midi_path: Path):
     with click.progressbar(
             midi_path.glob('*.mid'),
             length=total_songs,
-            label='Parsing midi files..') as bar:
+            label=click.style('Parsing midi files..',
+                              fg='bright_green')) as bar:
         for midi_file in bar:
 
             midi_data = converter.parse(midi_file)
@@ -27,11 +29,14 @@ def get_notes(midi_path: Path):
                 notes_to_parse = midi_data.flat.notes
 
             for element in notes_to_parse:
+
                 if isinstance(element, note.Note):
                     notes.append(str(element.pitch))
+                    songs.append(midi_file.stem)
                 elif isinstance(element, chord.Chord):
                     notes.append('.'.join(str(n) for n in element.normalOrder))
+                    songs.append(midi_file.stem)
 
             bar.update(1)
 
-    return notes
+    return songs, notes

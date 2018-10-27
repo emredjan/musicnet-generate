@@ -2,6 +2,7 @@ from pathlib import Path
 
 import click
 import joblib
+import pandas as pd
 
 from musicnet.data_utils import get_notes
 
@@ -14,12 +15,24 @@ def main(midi_path, out_file):
     midi_path = Path(midi_path)
     out_file = Path(out_file)
 
-    notes = get_notes(midi_path)
 
-    if out_file.exists:
+    songs, notes = get_notes(midi_path)
+
+    click.secho('Generating dataframe..', fg='bright_green')
+    df = pd.DataFrame(
+        {
+            'songs': songs,
+            'notes': notes
+        }
+    )
+
+    click.secho('Writing dataframe to file..', fg='bright_green')
+    if out_file.exists():
         out_file.unlink()
 
-    joblib.dump(notes, out_file)
+    joblib.dump(df, out_file)
+
+    click.secho('All done.', fg='bright_green')
 
 
 if __name__ == '__main__':
