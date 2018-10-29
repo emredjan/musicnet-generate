@@ -72,6 +72,12 @@ def dump_data(data_object: Any, out_file: Path) -> bool:
 
     if out_file.exists():
         out_file.unlink()
-    joblib.dump(data_object, out_file)
+
+    if isinstance(data_object, pd.DataFrame):
+        out_file = out_file.parents[0] / (out_file.name + '.pandas_pickle')
+        data_object.to_pickle(out_file)
+    else:
+        out_file = out_file.parents[0] / (out_file.name + '.joblib_dump')
+        joblib.dump(data_object, out_file)
 
     return out_file.exists()
