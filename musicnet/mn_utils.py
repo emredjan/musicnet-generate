@@ -94,7 +94,7 @@ def plot_piano_roll(audio_data: np.ndarray,
     plt.show()
 
 
-def prepare_label_data(musicnet_data: np.NpzFile) -> Dict[str, Any]:
+def prepare_label_data(musicnet_data: np.lib.npyio.NpzFile) -> Dict[str, Any]:
 
     comps = []
     starts = []
@@ -139,7 +139,6 @@ def prepare_label_data(musicnet_data: np.NpzFile) -> Dict[str, Any]:
 
 
 def export_label_data(label_data_dict: Dict[str, Any],
-                      out_file: Path,
                       sample_rate: int = params.sample_rate) -> pd.DataFrame:
 
     comp_df = pd.DataFrame(label_data_dict)

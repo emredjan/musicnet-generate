@@ -4,6 +4,9 @@ file_locations:
   musicnet_data: data/musicnet.npz
   midi_samples: data/midi_samples/
   midi_musicnet: data/midi_musicnet/
+  interim_data:
+    label_data: data/interim/label_data
+    element_data: data/interim/element_data
 musicnet:
   sample_rate: 44100
   resolution: 512

@@ -4,16 +4,16 @@ import click
 import joblib
 import pandas as pd
 
-from musicnet import data_utils
+from musicnet import data_utils, params
 
 
 @click.command()
-@click.argument('midi-path', type=click.Path(exists=True))
-@click.argument('out-file', type=click.Path())
+@click.option('--midi-path', '-m', type=click.Path(exists=True))
+@click.option('--out-file', '-o', type=click.Path())
 def main(midi_path, out_file):
 
-    midi_path = Path(midi_path)
-    out_file = Path(out_file)
+    midi_path = Path(midi_path) if midi_path else params.midi_musicnet
+    out_file = Path(out_file) if out_file else params.element_data
 
     element_data = data_utils.get_midi_elements(midi_path, out_file)
 
