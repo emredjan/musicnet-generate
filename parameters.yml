@@ -7,6 +7,7 @@ file_locations:
   interim_data:
     label_data: data/interim/label_data
     element_data: data/interim/element_data
+    element_data_processed: data/interim/element_data_processed
 musicnet:
   sample_rate: 44100
   resolution: 512

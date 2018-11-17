@@ -17,6 +17,7 @@ midi_musicnet = Path(fl['midi_musicnet'])
 
 label_data = Path(fl['interim_data']['label_data'])
 element_data = Path(fl['interim_data']['element_data'])
+element_data_processed = Path(fl['interim_data']['element_data_processed'])
 
 # musicnet
 mn = p['musicnet']

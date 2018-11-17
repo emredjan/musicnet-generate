@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Set, Any
+from typing import Any, Dict, List, Set
 
 import click
 import joblib
@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from intervaltree import Interval, IntervalTree
 
-from musicnet import params, data_utils
+from musicnet import data_utils, params
 
 
 def get_musicnet_metadata(
@@ -60,7 +60,8 @@ def plot_piano_roll(audio_data: np.ndarray,
                     seconds: int = None,
                     resolution: int = params.resolution,
                     figwidth: int = 20,
-                    figheight: int = 5) -> None:
+                    figheight: int = 5,
+                    darkmode: bool = True) -> None:
 
     windows_ps = sample_rate / float(resolution)
 
@@ -85,13 +86,15 @@ def plot_piano_roll(audio_data: np.ndarray,
 
     fig = plt.figure(figsize=(figwidth, figheight))
 
-    plt.imshow(window_range.T, aspect='auto', cmap='ocean_r')
+    cmap = 'cubehelix' if darkmode else 'ocean_r'
+
+    plt.imshow(window_range.T, aspect='auto', cmap=cmap)
 
     plt.gca().invert_yaxis()
     fig.axes[0].set_xlabel('Window')
     fig.axes[0].set_ylabel('Note (MIDI code)')
 
-    plt.show()
+    #plt.show()
 
 
 def prepare_label_data(musicnet_data: np.lib.npyio.NpzFile) -> Dict[str, Any]:
