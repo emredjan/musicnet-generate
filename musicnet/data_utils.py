@@ -5,7 +5,7 @@ from typing import Any, List
 import click
 import joblib
 import pandas as pd
-from music21 import chord, converter, instrument, note
+from music21 import chord, converter, instrument, note, duration
 from tqdm import tqdm
 
 from musicnet import params
@@ -20,15 +20,23 @@ def get_midi_elements(midi_path: Path) -> pd.DataFrame:
 
     comps = []
     parts = []
-    elements = []
+    e_types = []
+    e_names = []
+    e_durations = []
+    e_pitches = []
+    e_velocities = []
 
     total_comps = len(list(midi_path.rglob('*.mid')))
+    total_size = sum(m.stat().st_size for m in midi_path.rglob('*.mid'))
     click.secho(
         'Total MIDI files to parse: '+ str(total_comps), color='bright_blue')
 
+    parse_errors = 0
+    midi_errors = 0
+
     with click.progressbar(
             midi_path.rglob('*.mid'),
-            length=total_comps,
+            length=total_size,
             label=click.style('Parsing midi files..',
                               fg='bright_green')) as bar:
         for midi_file in bar:
@@ -36,10 +44,9 @@ def get_midi_elements(midi_path: Path) -> pd.DataFrame:
             try:
                 midi_data = converter.parse(midi_file)
             except:
-                click.secho(
-                    'Error parsing MIDI file: ' + str(midi_file),
-                    color='bright_red')
+                parse_errors += 1
                 continue
+
             midi_parts = instrument.partitionByInstrument(midi_data)
 
             try:
@@ -48,29 +55,69 @@ def get_midi_elements(midi_path: Path) -> pd.DataFrame:
                     part_contents = part.recurse()
 
                     for element in part_contents:
-                        elements.append(element)
+
+                        if element.isClassOrSubclass([note.Note]):
+                            e_type = 'note'
+                            e_name = element.nameWithOctave
+                            e_pitch = element.pitch.midi
+                            e_velocity = element.volume.velocity
+                        elif element.isClassOrSubclass([chord.Chord]):
+                            e_type = 'chord'
+                            e_name = element.pitchedCommonName
+                            e_pitch = ' '.join([str(p.midi) for p in element.pitches])
+                            e_velocity = element.volume.velocity
+                        elif element.isClassOrSubclass([note.Rest]):
+                            e_type = 'rest'
+                            e_name = 'R'
+                            e_pitch = None
+                            e_velocity = 0
+                        else:
+                            continue
+
+                        try:
+                            e_duration = element.duration.type
+                        except duration.DurationException:
+                            continue
+
+                        # element specific
+                        e_types.append(e_type)
+                        e_names.append(e_name)
+                        e_pitches.append(e_pitch)
+                        e_velocities.append(e_velocity)
+
+                        # common to all elements
+                        e_durations.append(e_duration)
                         parts.append(part.id)
                         comps.append(midi_file.stem)
 
             except TypeError:
-                click.secho(
-                    'Error in MIDI file: ' + str(midi_file), color='bright_red')
+                midi_errors += 1
                 continue
 
-            bar.update(1)
+            bar.update(midi_file.stat().st_size)
 
     element_data = pd.DataFrame(
         {
             'comp': comps,
             'part': parts,
-            'element': elements
+            'element_type': e_types,
+            'element_name': e_names,
+            'element_duration': e_durations,
+            'element_pitch': e_pitches,
+            'element_velocity': e_velocities
         }
     )
 
     # convert categorical columns to appropriate type
-    categ_columns = ['comp', 'part']
+    categ_columns = element_data.columns
     for col in categ_columns:
         element_data[col] = element_data[col].astype('category')
+
+    click.secho('# parsing errors: ' + str(parse_errors), color='bright_red')
+    click.secho('# invalid midi files: ' + str(midi_errors), color='bright_red')
+    click.secho(
+        '# files parsed: ' + str(total_comps - parse_errors - midi_errors),
+        color='bright_red')
 
     return element_data
 
@@ -110,7 +157,8 @@ def process_element_data(element_data: pd.DataFrame,
     # drop the music21 elements column
     ed2 = ed2.drop(columns=['element'])
 
-    note_filter = (ed2['note_midi'] >= 48) & (ed2['note_midi'] <= 71)
+    note_filter = (ed2['note_midi'] >= note_filter_min) & (ed2['note_midi'] <=
+                                                           note_filter_max)
     ed3 = ed2[note_filter].copy()
 
     # prepare training classes
@@ -146,9 +194,7 @@ def prepare_seq_data(element_data: pd.DataFrame,
                ] + ['note_' + str(i).zfill(3) for i in range(1, seq_size + 1)]
     data_seq = pd.DataFrame(columns=columns)
 
-    total_comps = data['comp'].nunique()
-
-    for i, comp in enumerate(data['comp'].unique()):
+    for comp in data['comp'].unique():
 
         lagged_df_comp = data[data['comp'] == comp].copy()
 

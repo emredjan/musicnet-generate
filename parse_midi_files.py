@@ -18,14 +18,14 @@ def main(midi_path, out_file_ed, out_file_edp):
     out_file_edp = Path(out_file_edp) if out_file_edp else params.element_data_processed
 
     element_data = data_utils.get_midi_elements(midi_path)
-    element_data_processed = data_utils.process_element_data(element_data)
+    #element_data_processed = data_utils.process_element_data(element_data)
 
     click.secho('Writing dataframe..', fg='bright_green')
 
     data_dumped_ed = data_utils.dump_data(element_data, out_file_ed)
-    data_dumped_edp = data_utils.dump_data(element_data_processed, out_file_edp)
+    #data_dumped_edp = data_utils.dump_data(element_data_processed, out_file_edp)
 
-    if data_dumped_ed & data_dumped_edp:
+    if data_dumped_ed:
         click.secho('All done.', fg='bright_green')
     else:
         click.secho('Problem Writing DataFrame.', fg='bright_red')
