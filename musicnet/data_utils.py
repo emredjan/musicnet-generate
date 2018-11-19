@@ -29,7 +29,7 @@ def get_midi_elements(midi_path: Path) -> pd.DataFrame:
     total_comps = len(list(midi_path.rglob('*.mid')))
     total_size = sum(m.stat().st_size for m in midi_path.rglob('*.mid'))
     click.secho(
-        'Total MIDI files to parse: '+ str(total_comps), color='bright_blue')
+        'Total MIDI files to parse: ' + str(total_comps), color='bright_blue')
 
     parse_errors = 0
     midi_errors = 0
@@ -64,7 +64,8 @@ def get_midi_elements(midi_path: Path) -> pd.DataFrame:
                         elif element.isClassOrSubclass([chord.Chord]):
                             e_type = 'chord'
                             e_name = element.pitchedCommonName
-                            e_pitch = ' '.join([str(p.midi) for p in element.pitches])
+                            e_pitch = ' '.join(
+                                [str(p.midi) for p in element.pitches])
                             e_velocity = element.volume.velocity
                         elif element.isClassOrSubclass([note.Rest]):
                             e_type = 'rest'
@@ -96,17 +97,15 @@ def get_midi_elements(midi_path: Path) -> pd.DataFrame:
 
             bar.update(midi_file.stat().st_size)
 
-    element_data = pd.DataFrame(
-        {
-            'comp': comps,
-            'part': parts,
-            'element_type': e_types,
-            'element_name': e_names,
-            'element_duration': e_durations,
-            'element_pitch': e_pitches,
-            'element_velocity': e_velocities
-        }
-    )
+    element_data = pd.DataFrame({
+        'comp': comps,
+        'part': parts,
+        'element_type': e_types,
+        'element_name': e_names,
+        'element_duration': e_durations,
+        'element_pitch': e_pitches,
+        'element_velocity': e_velocities
+    })
 
     # convert categorical columns to appropriate type
     categ_columns = element_data.columns
@@ -114,7 +113,8 @@ def get_midi_elements(midi_path: Path) -> pd.DataFrame:
         element_data[col] = element_data[col].astype('category')
 
     click.secho('# parsing errors: ' + str(parse_errors), color='bright_red')
-    click.secho('# invalid midi files: ' + str(midi_errors), color='bright_red')
+    click.secho(
+        '# invalid midi files: ' + str(midi_errors), color='bright_red')
     click.secho(
         '# files parsed: ' + str(total_comps - parse_errors - midi_errors),
         color='bright_red')
